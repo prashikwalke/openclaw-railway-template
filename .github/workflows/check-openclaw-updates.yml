@@ -12,7 +12,7 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Get latest OpenClaw version from npm
         id: latest
@@ -43,7 +43,7 @@ jobs:
 
       - name: Open PR
         if: steps.latest.outputs.version != steps.current.outputs.version
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v7
         with:
           commit-message: "Bump OpenClaw to ${{ steps.latest.outputs.version }}"
           branch: bump-openclaw-${{ steps.latest.outputs.version }}
