@@ -1,0 +1,65 @@
+name: Check for OpenClaw updates
+
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+jobs:
+  check-update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get latest OpenClaw version from npm
+        id: latest
+        run: |
+          LATEST=$(npm view openclaw version)
+          echo "version=$LATEST" >> $GITHUB_OUTPUT
+          echo "Latest OpenClaw on npm: $LATEST"
+
+      - name: Get current pinned version
+        id: current
+        run: |
+          if [ -f .openclaw-version ]; then
+            CURRENT=$(cat .openclaw-version | tr -d '[:space:]')
+          else
+            CURRENT="none"
+          fi
+          echo "version=$CURRENT" >> $GITHUB_OUTPUT
+          echo "Currently pinned: $CURRENT"
+
+      - name: Exit if already on latest
+        if: steps.latest.outputs.version == steps.current.outputs.version
+        run: |
+          echo "Already on latest. Nothing to do."
+
+      - name: Update version file
+        if: steps.latest.outputs.version != steps.current.outputs.version
+        run: echo "${{ steps.latest.outputs.version }}" > .openclaw-version
+
+      - name: Open PR
+        if: steps.latest.outputs.version != steps.current.outputs.version
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "Bump OpenClaw to ${{ steps.latest.outputs.version }}"
+          branch: bump-openclaw-${{ steps.latest.outputs.version }}
+          title: "Bump OpenClaw to ${{ steps.latest.outputs.version }}"
+          body: |
+            New OpenClaw release available.
+
+            **Current:** `${{ steps.current.outputs.version }}`
+            **Latest:** `${{ steps.latest.outputs.version }}`
+
+            Release notes: https://github.com/openclaw/openclaw/releases/tag/v${{ steps.latest.outputs.version }}
+
+            **To deploy:**
+            1. Confirm a backup of `/data/` exists (ask Maitreya to create one if not)
+            2. Merge this PR
+            3. Wait ~9 min for Railway to rebuild and pass healthcheck
+            4. Verify with Maitreya: `run: openclaw --version`
+
+            **If something breaks:** roll back by editing `.openclaw-version` to the previous version (`${{ steps.current.outputs.version }}`) and committing.
