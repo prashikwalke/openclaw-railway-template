@@ -18,7 +18,7 @@ COPY .openclaw-version /tmp/.openclaw-version
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN corepack enable && pnpm install --frozen-lockfile --prod --config.onlyBuiltDependencies='["node-pty"]'
+RUN corepack enable && pnpm install --prod
 COPY src ./src
 COPY --chmod=755 entrypoint.sh ./entrypoint.sh
 
