@@ -17,8 +17,8 @@ COPY .openclaw-version /tmp/.openclaw-version
 
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml ./
-RUN corepack enable && pnpm config set auto-install-peers true && pnpm install --frozen-lockfile --prod --config.dangerouslyAllowAllBuilds=true
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN corepack enable && pnpm approve-builds node-pty && pnpm install --frozen-lockfile --prod
 COPY src ./src
 COPY --chmod=755 entrypoint.sh ./entrypoint.sh
 
